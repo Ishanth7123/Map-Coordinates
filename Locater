@@ -1,0 +1,116 @@
+import sys
+import folium
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QCheckBox
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QGridLayout
+from PyQt5.QtCore import Qt
+
+class MapApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        main_layout = QHBoxLayout()
+
+        final_layout = QVBoxLayout()
+        final_layout.addLayout(main_layout)
+
+        self.setLayout(final_layout)
+
+        self.setWindowTitle('MAPS')
+        self.setMinimumSize(1000, 600)
+        self.setStyleSheet('''
+            QWidget {
+                font-size: 20px;
+            }
+
+            QLabel {
+                font-size: 25px;
+                color: #333;
+            }
+
+            QLineEdit {
+                font-size: 20px;
+                padding: 5px;
+                border: 2px solid #ccc;
+                border-radius: 5px;
+            }
+
+            QPushButton {
+                font-size: 25px;
+                background-color: #4CAF50;
+                color: #fff;
+                padding: 10px;
+                border-radius: 5px;
+                border: none;
+            }
+
+            QPushButton:hover {
+                background-color: #3e8e41;
+            }
+        ''')
+
+        input_layout = QGridLayout() 
+        self.latitude_label = QLabel('Latitude:')
+        input_layout.addWidget(self.latitude_label, 0, 0) 
+        
+        self.latitude_input = QLineEdit()
+        self.latitude_input.setFixedWidth(700)
+        input_layout.addWidget(self.latitude_input, 0, 1) 
+
+        self.longitude_label = QLabel('Longitude:')
+        input_layout.addWidget(self.longitude_label, 1, 0) 
+
+        self.longitude_input = QLineEdit()
+        self.longitude_input.setFixedWidth(700)
+        input_layout.addWidget(self.longitude_input, 1, 1) 
+
+        self.checkbox = QCheckBox('GPS locater')
+        input_layout.addWidget(self.checkbox, 2, 0)
+
+        main_layout.addLayout(input_layout)
+
+        self.locate_button = QPushButton('Locate')
+        self.locate_button.setFixedWidth(100)
+        self.locate_button.clicked.connect(self.on_locate_clicked)
+
+        button_layout = QVBoxLayout()
+        button_layout.addWidget(self.locate_button)
+
+        main_layout.addLayout(button_layout)
+
+        self.map_widget = QWebEngineView()
+        self.map_widget.setFixedHeight(500)
+        final_layout.addWidget(self.map_widget)
+
+        self.setLayout(final_layout)
+
+        self.latitude_label.setStyleSheet("color: white")
+        self.longitude_label.setStyleSheet("color: white")
+
+        self.checkbox.stateChanged.connect(self.on_checkbox_state_changed)
+
+    def on_locate_clicked(self):
+        latitude = float(self.latitude_input.text())
+        longitude = float(self.longitude_input.text())
+        m = folium.Map(location=[latitude, longitude], zoom_start=5)
+        folium.Marker([latitude, longitude], popup='<strong>Location</strong>').add_to(m)
+        html = m._repr_html_()
+        self.map_widget.setHtml(html)
+        self.map_widget.show()
+
+    def on_checkbox_state_changed(self, state):
+        if state == Qt.Checked:
+            latitude, longitude = 40.541318, -111.934657
+            self.latitude_input.setText(str(latitude))
+            self.longitude_input.setText(str(longitude))
+        else:
+            self.latitude_input.setText('')
+            self.longitude_input.setText('')
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    map_app = MapApp()
+    map_app.show()
+    sys.exit(app.exec_())
